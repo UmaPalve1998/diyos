@@ -21,8 +21,8 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
     super.initState();
      controller = Get.put(ProfileController());
      controller.userData(context);
-
   }
+
   @override
   Widget build(BuildContext context) {
     SizeConfig().init(context);
@@ -79,7 +79,7 @@ class _UserDetailsScreenState extends State<UserDetailsScreen> {
             ),
             SizedBox(height: 10,),
             GetBuilder<ProfileController>(
-              builder: (_) {
+              builder: (controller) {
                 return Padding(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(

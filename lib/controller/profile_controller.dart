@@ -24,12 +24,12 @@ class ProfileController extends GetxController {
     _profile = ProfileRepository();
   }
 
-  userData(BuildContext context) async {
+   userData(BuildContext context) async {
     ProfileRequest profile = new ProfileRequest(companyId: "6", empId: "DEM000002", catName: true);
 
     _userDatarResponse = ApiResponse.loading('Loading...');
     try {
-      Profile response = await _profile.fetchProfile(context,json.encode(profile));
+      Profile response = await _profile.fetchProfile(context,profile);
       debugPrint("Banner pro ${response}");
       _userDatarResponse = ApiResponse.completed(response);
     update();

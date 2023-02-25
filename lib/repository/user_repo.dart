@@ -10,9 +10,9 @@ class ProfileRepository {
 
 
   Future<Profile> fetchProfile(BuildContext context,
-      var requestModel) async {
+      ProfileRequest requestModel) async {
     final response = await HttpClient.instance.post(
-        PROFILE_DETAILS, requestModel, context);
+        PROFILE_DETAILS, json.encode(requestModel), context);
     debugPrint("Banner Repository-> ${response}");
     return Profile.fromJson(json.decode(response));
   }

@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get.dart';
 
 import '../helper/api.dart';
 import '../view/components/common_dailog.dart';
@@ -19,9 +19,9 @@ class HttpClient {
 
   bool isOpen = true;
 
-  showErrorMessage({message, context, isExit}){
+  showErrorMessage({message, context, isExit}) {
     debugPrint("isOpen $isOpen");
-    if(isOpen){
+    if (isOpen) {
       isOpen = !isOpen;
       showDialog(
           context: context,
@@ -29,19 +29,22 @@ class HttpClient {
             return CommonDialog(
               title: "Error from server!",
               messageText: message,
-              positiveButtonCallBack: isExit ? (){
-                isOpen = !isOpen;
-                if (Platform.isAndroid) {
-                  SystemNavigator.pop();
-                } else if (Platform.isIOS) {
-                  exit(0);
-                }else{
-                  exit(0);
-                }
-              } : (){
-                isOpen = !isOpen;
-                Navigator.pop(context);
-              },);
+              positiveButtonCallBack: isExit
+                  ? () {
+                      isOpen = !isOpen;
+                      if (Platform.isAndroid) {
+                        SystemNavigator.pop();
+                      } else if (Platform.isIOS) {
+                        exit(0);
+                      } else {
+                        exit(0);
+                      }
+                    }
+                  : () {
+                      isOpen = !isOpen;
+                      Navigator.pop(context);
+                    },
+            );
           });
     }
   }
@@ -61,8 +64,8 @@ class HttpClient {
     var uri = Uri.parse(BASE_URL + endPoint);
     // var requestBody=json.decode(body);
     bool isOffline = await check();
-   debugPrint("post url--> ${uri} ${body}");
-   debugPrint("Network ${isOffline}");
+    debugPrint("post url--> ${uri} ${body}");
+    debugPrint("Network ${isOffline}");
     try {
       if (!isOffline) {
         showDialog(
@@ -74,10 +77,20 @@ class HttpClient {
               );
             });
       } else {
-        var response = await http
-            .post(uri, body: body);
+        var response = await http.post(uri,
+            body: body,
+            headers:  {
+              HttpHeaders.contentTypeHeader: "application/json",
+              "Connection": "Keep-Alive",
+              "Keep-Alive": "timeout=5, max=1000"
+            }
 
-        return _processResponse(response,API_METHOD.POST,context,endPoint,body);
+        );
+        print("${response.persistentConnection} ");
+        print("${response.request} ");
+        print("${response.headers} ");
+        return _processResponse(
+            response, API_METHOD.POST, context, endPoint, body);
       }
     } on SocketException {
       throw FetchDataException("No Interent Connection", uri.toString());
@@ -85,14 +98,15 @@ class HttpClient {
       throw ApiNotRespondingException(
           "Api not responded in time", uri.toString());
     } catch (e) {
-     debugPrint('error ${e}');
+      debugPrint('error ${e}');
     }
   }
 
   //delete method caling
 
   //response method calling
-  dynamic _processResponse(http.Response response,API_METHOD api_method,BuildContext context,String endPoint,dynamic body) async{
+  dynamic _processResponse(http.Response response, API_METHOD api_method,
+      BuildContext context, String endPoint, dynamic body) async {
     //debugPrint("Process response ${response.body}");
     debugPrint("Status code ${response.statusCode}");
     debugPrint("endPoint ${endPoint}");
@@ -111,18 +125,13 @@ class HttpClient {
         showErrorMessage(
             context: context,
             message: "Data not found: Something went wrong",
-            isExit: false
-        );
-        throw GenericException(
-            "Internal Server Error: ${response.statusCode}",
+            isExit: false);
+        throw GenericException("Internal Server Error: ${response.statusCode}",
             response.request!.url.toString());
       case 403:
         Fluttertoast.showToast(msg: "Session Expired");
         showErrorMessage(
-            context: context,
-            message: "Session Expired",
-            isExit: false
-        );
+            context: context, message: "Session Expired", isExit: false);
         // SPManager.instance.logout();
         // Get.offAll(Login());
         throw UnAuthorizedException(
@@ -132,19 +141,13 @@ class HttpClient {
         showErrorMessage(
             context: context,
             message: "Internal Server Error: Something went wrong",
-            isExit: false
-        );
-        throw GenericException(
-            "Internal Server Error: ${response.statusCode}",
+            isExit: false);
+        throw GenericException("Internal Server Error: ${response.statusCode}",
             response.request!.url.toString());
       case 503:
         showErrorMessage(
-            context: context,
-            message: "Maintainence message",
-            isExit: true
-        );
-        throw GenericException(
-            "Maintainence message: ${response.statusCode}",
+            context: context, message: "Maintainence message", isExit: true);
+        throw GenericException("Maintainence message: ${response.statusCode}",
             response.request!.url.toString());
       default:
         throw BadRequestException(
@@ -153,7 +156,9 @@ class HttpClient {
     }
   }
 
-  dynamic _processResponseDoc(http.Response response,) {
+  dynamic _processResponseDoc(
+    http.Response response,
+  ) {
     //debugPrint("Process response ${response.body}");
     //debugPrint("Status code ${response.statusCode}");
     switch (response.statusCode) {
@@ -183,11 +188,6 @@ class HttpClient {
             response.request!.url.toString());
     }
   }
-
-
-
 }
 
-enum API_METHOD {
-GET,GET_WITH_REQUEST,POST,DELETE,PUT
-}
+enum API_METHOD { GET, GET_WITH_REQUEST, POST, DELETE, PUT }
